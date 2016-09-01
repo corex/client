@@ -46,12 +46,12 @@ class HttpClient
     }
 
     /**
-     * Set base url.
+     * Set url.
      *
      * @param string $url
      * @return $this
      */
-    public function setBaseUrl($url)
+    public function setUrl($url)
     {
         $this->baseUrl = $url;
         return $this;

@@ -14,6 +14,8 @@ class RestClient
     public function __construct()
     {
         $this->client = new HttpClient();
+        $this->client->setContentType('application/json');
+        $this->client->setAcceptType('application/json');
         $this->response = [];
         $this->responseRaw = '';
     }
@@ -36,7 +38,7 @@ class RestClient
      */
     public function setUrl($url)
     {
-        $this->client->setBaseUrl($url);
+        $this->client->setUrl($url);
         return $this;
     }
 

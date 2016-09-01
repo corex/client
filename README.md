@@ -1,5 +1,5 @@
 # CoRex Client
-Various clients for php (curl-wrapper, rest-client, etc.)
+Various clients for php (Http, Rest, etc.)
 
 These clients are designed to be as simple as possible and therefore there will only be a few examples. The rest should be easy to understand and implement.
 

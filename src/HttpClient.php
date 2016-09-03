@@ -299,6 +299,19 @@ class HttpClient
     }
 
     /**
+     * Get response size.
+     *
+     * @return integer
+     */
+    public function getResponseSize()
+    {
+        if (isset($this->responseHeaders['Content-Length'])) {
+            return intval($this->responseHeaders['Content-Length']);
+        }
+        return 0;
+    }
+
+    /**
      * Get http code.
      *
      * @return integer

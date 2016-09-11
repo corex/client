@@ -88,3 +88,10 @@ Except that when you use get(), post(), put() and delete(), the data returned wi
 Basic methods exists for getting data out of response-object using dot-notation.
 You can extend the existing Response class and parse the class as secondary parameter for client operation.
 Note that if you do this, you might not have code completion on all of your methods.
+
+Example of getting title from object no. 5.
+```php
+$client = new Client('https://jsonplaceholder.typicode.com/albums');
+$response = $client->get();
+$title = $response->get('4.title');
+```

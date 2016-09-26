@@ -5,6 +5,7 @@ namespace CoRex\Client\Rest;
 class Response implements ResponseInterface
 {
     private $data;
+    private $json;
 
     /**
      * Response constructor.
@@ -17,7 +18,9 @@ class Response implements ResponseInterface
         if ($response === null) {
             return;
         }
+        $this->json = '';
         if (is_string($response) && in_array(substr($response, 0, 1), ['[', '{'])) {
+            $this->json = $response;
             $response = json_decode($response, true);
         }
         if (!is_array($response)) {
@@ -71,5 +74,23 @@ class Response implements ResponseInterface
     public function getBoolean($path, $defaultValue = false)
     {
         return (boolean)$this->get($path, $defaultValue);
+    }
+
+    /**
+     * To array.
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->data;
+    }
+
+    /**
+     * To json.
+     */
+    public function toJson()
+    {
+        return $this->json;
     }
 }

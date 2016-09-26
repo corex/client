@@ -95,3 +95,28 @@ $client = new Client('https://jsonplaceholder.typicode.com/albums');
 $response = $client->get();
 $title = $response->get('4.title');
 ```
+
+Example of getting data using DataList/DataObject class.
+```php
+class AlbumData extends DataObject
+{
+    public $userId;
+    public $id;
+    public $title;
+}
+
+class AlbumList extends DataList
+{
+    public function current()
+    {
+        return new AlbumData(parent::current());
+    }
+}
+
+$client = new Client('https://jsonplaceholder.typicode.com/albums');
+$response = $client->get();
+$albums = new AlbumList($response);
+foreach ($albums as $album) {
+    print($album->title . "\n");
+}
+```

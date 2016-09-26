@@ -80,6 +80,7 @@ this field will be overwritten by property in class. All properties in classes w
 
 ## Rest\Client
 - Support for getting data out of response using dot notation.
+- Support for handling response through object properties (DataList / DataObject).
 
 The Rest\Client is pretty much the same as Http\Client since Rest\Client extends Http\Client.
 Except that when you use get(), post(), put() and delete(), the data returned will be an instance of Response class.

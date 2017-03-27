@@ -1,6 +1,8 @@
 # CoRex Client
 Various clients for php (Http, Rest, etc.)
 
+**_Versioning for this package follows http://semver.org/. Backwards compatibility might break on upgrade to major versions._**
+
 ## Http\Client
 - Support for specifying base-url through constructor and/or by method.
 - Support for specifying user agent.

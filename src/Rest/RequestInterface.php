@@ -1,6 +1,6 @@
 <?php
 
-namespace CoRex\Client\Http;
+namespace CoRex\Client\Rest;
 
 interface RequestInterface
 {

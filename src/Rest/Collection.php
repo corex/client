@@ -2,7 +2,7 @@
 
 namespace CoRex\Client\Rest;
 
-abstract class DataList implements \Iterator, \Countable
+abstract class Collection implements \Iterator, \Countable
 {
     private $data;
 

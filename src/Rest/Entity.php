@@ -2,7 +2,7 @@
 
 namespace CoRex\Client\Rest;
 
-abstract class DataObject
+abstract class Entity
 {
     /**
      * Data constructor.

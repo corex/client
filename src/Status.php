@@ -1,8 +1,8 @@
 <?php
 
-namespace CoRex\Client\Http;
+namespace CoRex\Client;
 
-class HttpCode
+class Status
 {
     private static $messages = [
 

@@ -1,10 +1,9 @@
 <?php
 
 use CoRex\Client\Base\Client as BaseClient;
-use CoRex\Client\Connector\CurlConnector;
-use CoRex\Client\Http\Request;
 use CoRex\Client\Method;
 use CoRex\Client\Rest\Client;
+use CoRex\Client\Rest\Request;
 use CoRex\Client\Rest\Response;
 use CoRex\Support\Obj;
 use PHPUnit\Framework\TestCase;
@@ -12,27 +11,6 @@ use PHPUnit\Framework\TestCase;
 class RestClientTest extends TestCase
 {
     private $baseUrl = 'http://this.is.a.test/{token}/test';
-
-    /**
-     * Test client connector default.
-     */
-    public function testClientConnectorDefault()
-    {
-        $client = new Client();
-        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $client, BaseClient::class);
-        $this->assertTrue($properties['connector'] instanceof CurlConnector);
-    }
-
-    /**
-     * Test client connector test.
-     */
-    public function testClientConnectorTest()
-    {
-        $testConnector = new TestConnector();
-        $client = new Client($testConnector);
-        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $client, BaseClient::class);
-        $this->assertTrue($properties['connector'] instanceof TestConnector);
-    }
 
     /**
      * Test base url.
@@ -54,13 +32,11 @@ class RestClientTest extends TestCase
         $request = new Request(Method::GET);
         $request->token('token', $check);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-
-        $this->assertEquals(['token' => $check], $request->tokens);
+        $debug = $client->getDebug();
+        $this->assertEquals(['token' => $check], $debug['tokens']);
     }
 
     /**
@@ -71,14 +47,12 @@ class RestClientTest extends TestCase
         $check = md5(microtime(true));
         $request = new Request(Method::GET);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->token('token', $check);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-
-        $this->assertEquals(['token' => $check], $request->tokens);
+        $debug = $client->getDebug();
+        $this->assertEquals(['token' => $check], $debug['tokens']);
     }
 
     /**
@@ -91,14 +65,12 @@ class RestClientTest extends TestCase
         $request = new Request(Method::GET);
         $request->token('token', $check1);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->token('token', $check2, true);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-
-        $this->assertEquals(['token' => $check2], $request->tokens);
+        $debug = $client->getDebug();
+        $this->assertEquals(['token' => $check2], $debug['tokens']);
     }
 
     /**
@@ -110,13 +82,11 @@ class RestClientTest extends TestCase
         $request = new Request(Method::GET);
         $request->param('param', $check);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-
-        $this->assertEquals(['param' => $check], $request->parameters);
+        $debug = $client->getDebug();
+        $this->assertEquals(['param' => $check], $debug['parameters']);
     }
 
     /**
@@ -127,14 +97,12 @@ class RestClientTest extends TestCase
         $check = md5(microtime(true));
         $request = new Request(Method::GET);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->param('param', $check);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-
-        $this->assertEquals(['param' => $check], $request->parameters);
+        $debug = $client->getDebug();
+        $this->assertEquals(['param' => $check], $debug['parameters']);
     }
 
     /**
@@ -147,13 +115,12 @@ class RestClientTest extends TestCase
         $request = new Request(Method::GET);
         $request->param('param', $check1);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->param('param', $check2, true);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-        $this->assertEquals(['param' => $check2], $request->parameters);
+        $debug = $client->getDebug();
+        $this->assertEquals(['param' => $check2], $debug['parameters']);
     }
 
     /**
@@ -165,13 +132,15 @@ class RestClientTest extends TestCase
         $request = new Request(Method::GET);
         $request->header('header', $check);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-
-        $this->assertEquals(['header' => $check], $request->headers);
+        $debug = $client->getDebug();
+        $this->assertEquals([
+            'header' => $check,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ], $debug['headers']);
     }
 
     /**
@@ -182,14 +151,16 @@ class RestClientTest extends TestCase
         $check = md5(microtime(true));
         $request = new Request(Method::GET);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->header('header', $check);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-
-        $this->assertEquals(['header' => $check], $request->headers);
+        $debug = $client->getDebug();
+        $this->assertEquals([
+            'header' => $check,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ], $debug['headers']);
     }
 
     /**
@@ -202,13 +173,16 @@ class RestClientTest extends TestCase
         $request = new Request(Method::GET);
         $request->header('header', $check1);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->header('header', $check2, true);
         $client->call($request);
 
-        $connector = PropertiesHelper::getClientConnector($client, BaseClient::class);
-        $request = PropertiesHelper::getConnectorRequest($connector);
-        $this->assertEquals(['header' => $check2], $request->headers);
+        $debug = $client->getDebug();
+        $this->assertEquals([
+            'header' => $check2,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ], $debug['headers']);
     }
 
     /**
@@ -220,28 +194,12 @@ class RestClientTest extends TestCase
 
         $request = new Request(Method::GET);
 
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->userAgent($userAgent);
         $client->call($request);
 
-        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $client, BaseClient::class);
-        $this->assertEquals($userAgent, $properties['userAgent']);
-    }
-
-    /**
-     * Test get connector.
-     */
-    public function testGetConnector()
-    {
-        $client = $this->getTestClient();
-
-        $reflectionClass = new ReflectionClass($client);
-        $method = $reflectionClass->getMethod('getConnector');
-        $method->setAccessible(true);
-        $getConnector = $method->getClosure($client);
-
-        $connector = $getConnector();
-        $this->assertInstanceOf(TestConnector::class, $connector);
+        $debug = $client->getDebug();
+        $this->assertEquals($userAgent, $debug['userAgent']);
     }
 
     /**
@@ -251,7 +209,7 @@ class RestClientTest extends TestCase
     {
         $this->expectException(TypeError::class);
         $request = new stdClass();
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $client->call($request);
     }
 
@@ -261,7 +219,7 @@ class RestClientTest extends TestCase
     public function testCallCorrect()
     {
         $request = new Request(Method::GET);
-        $client = $this->getTestClient();
+        $client = $this->getTestClient([], [], 0);
         $response = $client->call($request);
         $this->assertInstanceOf(Response::class, $response);
     }
@@ -269,24 +227,31 @@ class RestClientTest extends TestCase
     /**
      * Get test client.
      *
+     * @param mixed $testResponse
+     * @param array $testHeaders
+     * @param integer $testStatus
      * @return Client
+     * @throws Exception
      */
-    private function getTestClient()
+    private function getTestClient($testResponse, array $testHeaders, $testStatus)
     {
-        $connector = $this->getTestConnector();
-        $client = new Client($connector);
+        if ($testResponse === null) {
+            throw new Exception('You must specify a test response.');
+        }
+        if (is_array($testResponse)) {
+            $testResponse = json_encode($testResponse);
+        }
+        $client = new Client();
         $client->baseUrl($this->baseUrl);
-        return $client;
-    }
 
-    /**
-     * Get test connector.
-     *
-     * @return TestConnector
-     */
-    private function getTestConnector()
-    {
-        $connector = new TestConnector();
-        return $connector;
+        // Set test properties.
+        $testProperties = [
+            'testResponse' => $testResponse,
+            'testHeaders' => $testHeaders,
+            'testStatus' => $testStatus,
+        ];
+        Obj::setProperties($client, $testProperties, BaseClient::class);
+
+        return $client;
     }
 }

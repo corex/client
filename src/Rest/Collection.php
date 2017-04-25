@@ -68,7 +68,7 @@ abstract class Collection implements \Iterator, \Countable
     public function next()
     {
         if ($this->data === null) {
-            return null;
+            return;
         }
         next($this->data);
     }
@@ -112,7 +112,7 @@ abstract class Collection implements \Iterator, \Countable
     public function rewind()
     {
         if ($this->data === null) {
-            return null;
+            return;
         }
         reset($this->data);
     }

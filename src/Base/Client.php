@@ -2,50 +2,71 @@
 
 namespace CoRex\Client\Base;
 
-use CoRex\Client\Connector\CurlConnector;
+use CoRex\Client\Method;
 use CoRex\Support\Obj;
+use Exception;
 
 abstract class Client
 {
+    private $testResponse = null;
+    private $testHeaders = [];
+    private $testStatus = 0;
     private $baseUrl;
     private $tokens;
     private $parameters;
     private $headers;
     private $userAgent;
+    private $requestProperties;
+    private $curl;
+    private $responseHeaders;
+    private $status;
+    private $timeout;
+    private $response;
 
     /**
-     * @var ConnectorRequest
-     */
-    private $connectorRequest;
-
-    /**
-     * @var ConnectorInterface
-     */
-    private $connector;
-
-    /**
-     * Constructor.
+     * Client constructor.
      *
-     * @param ConnectorInterface|null $connector
-     * @throws \Exception
+     * @throws Exception
      */
-    public function __construct(ConnectorInterface $connector = null)
+    public function __construct()
     {
-        // Set connector.
-        $this->connector = $connector;
-        if ($this->connector === null) {
-            $this->connector = new CurlConnector();
+        if (!function_exists('curl_init')) {
+            throw new Exception('Client URL Library does not exist.');
         }
-        if (!$this->connector instanceof ConnectorInterface) {
-            throw new \Exception('Connector parsed is not valid.');
-        }
+        $this->curl = curl_init();
 
+        // Set generic options.
+        curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($this->curl, CURLOPT_HEADER, true);
+        curl_setopt($this->curl, CURLINFO_HEADER_OUT, true);
+        curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($this->curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($this->curl, CURLOPT_HEADERFUNCTION, [$this, 'handleResponseHeaders']);
+        curl_setopt($this->curl, CURLOPT_VERBOSE, true);
+
+        $this->responseHeaders = [];
+        $this->status = 200;
+        $this->timeout = 2;
+        $this->response = '';
+
+        // Set connector.
         $this->baseUrl = '';
         $this->tokens = [];
         $this->parameters = [];
         $this->headers = [];
         $this->userAgent = '';
-        $this->connectorRequest = null;
+    }
+
+    /**
+     * Set timeout.
+     *
+     * @param integer $timeout
+     * @return $this
+     */
+    public function timeout($timeout)
+    {
+        $this->timeout = $timeout;
+        return $this;
     }
 
     /**
@@ -116,80 +137,103 @@ abstract class Client
     }
 
     /**
-     * Get connector.
+     * Call connector.
      *
-     * @return ConnectorInterface|CurlConnector
-     * @throws \Exception
+     * @param object $request
      */
-    protected function getConnector()
+    protected function callConnector($request)
     {
-        if (!$this->connector instanceof ConnectorInterface) {
-            throw new \Exception('Connector not set.');
+        $this->requestProperties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $request, Request::class);
+        $headers = $this->getMergedHeaders();
+
+        // Set timeout.
+        curl_setopt($this->curl, CURLOPT_TIMEOUT, $this->timeout);
+
+        // Set method (except GET).
+        $method = $this->getRequestProperty('method', 'get');
+        if ($method != Method::GET) {
+            curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, strtoupper($method));
         }
-        return $this->connector;
+
+        // post
+        if ($method == Method::POST) {
+            curl_setopt($this->curl, CURLOPT_POST, true);
+        }
+
+        // put
+        if ($method == Method::PUT) {
+            $headers['Content-Length'] = mb_strlen($request->body);
+        }
+
+        // Set headers.
+        if (count($headers) > 0) {
+            $requestHeaders = [];
+            foreach ($headers as $name => $value) {
+                $requestHeaders[] = $name . ': ' . $value;
+            }
+            curl_setopt($this->curl, CURLOPT_HTTPHEADER, $headers);
+        }
+
+        // Set body.
+        $body = (string)$this->getRequestProperty('body', '');
+        if ($body != '') {
+            curl_setopt($this->curl, CURLOPT_POSTFIELDS, $body);
+        }
+
+        // Set user agent.
+        if ($this->userAgent != '') {
+            curl_setopt($this->curl, CURLOPT_USERAGENT, $this->userAgent);
+        }
+
+        // Call and handle result.
+        curl_setopt($this->curl, CURLOPT_URL, $this->buildUrl());
+        if ($this->testResponse === null) {
+            $this->response = curl_exec($this->curl);
+            $curlInfo = curl_getinfo($this->curl);
+            if (isset($curlInfo['header_size'])) {
+                $this->response = substr($this->response, $curlInfo['header_size']);
+            }
+            $this->status = isset($curlInfo['http_code']) ? $curlInfo['http_code'] : 0;
+        } else {
+            $this->response = $this->testResponse;
+            $this->responseHeaders = $this->testHeaders;
+            $this->status = $this->testStatus;
+        }
+        curl_close($this->curl);
     }
 
     /**
-     * Call connector.
+     * Get response.
      *
-     * @param RequestInterface $request
-     * @return ConnectorResponse
+     * @return string
      */
-    protected function callConnector(RequestInterface $request)
+    protected function getResponse()
     {
-        // Compile connector request.
-        $this->connectorRequest = new ConnectorRequest();
-        $this->connectorRequest->userAgent = $this->userAgent;
+        return $this->response;
+    }
 
-        // Merge properties.
-        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $request, Request::class);
-        if (count($properties) > 0) {
-            foreach ($properties as $name => $value) {
-
-                // Handle method.
-                if ($name == 'method') {
-                    $this->connectorRequest->method = $value;
-                }
-
-                // Handle path.
-                if ($name == 'path') {
-                    $this->connectorRequest->url = trim($this->baseUrl, '/');
-                    if ((string)$value != '') {
-                        $this->connectorRequest->url .= '/' . trim($value, '/');
-                    }
-                }
-
-                // Handle tokens.
-                if ($name == 'tokens') {
-                    $this->connectorRequest->tokens = $this->mergeProperties($this->tokens, $value);
-                }
-
-                // Handle parameters.
-                if ($name == 'parameters') {
-                    $this->connectorRequest->parameters = $this->mergeProperties($this->parameters, $value);
-                }
-
-                // Handle headers.
-                if ($name == 'headers') {
-                    $this->connectorRequest->headers = $this->mergeProperties($this->headers, $value);
-                }
-
-                // Handle body.
-                if ($name == 'body') {
-                    $this->connectorRequest->body = $value;
-                }
-            }
+    /**
+     * Get headers.
+     *
+     * @return array
+     */
+    protected function getHeaders()
+    {
+        $responseHeaders = $this->responseHeaders;
+        if (!is_array($responseHeaders)) {
+            $responseHeaders = [];
         }
+        return $responseHeaders;
+    }
 
-        // Call connector.
-        $connector = $this->getConnector();
-        $response = $connector->call($this->connectorRequest);
-        $headers = $connector->getHeaders();
-        $httpCode = $connector->getStatus();
-        if (!is_array($headers)) {
-            $headers = [];
-        }
-        return new ConnectorResponse($response, $headers, $httpCode);
+    /**
+     * Get status.
+     *
+     * @return integer
+     */
+    protected function getStatus()
+    {
+        return $this->status;
     }
 
     /**
@@ -201,16 +245,88 @@ abstract class Client
     public function getDebug()
     {
         $result = [
-            'method' => $this->connectorRequest->method,
-            'url' => $this->connectorRequest->url,
-            'userAgent' => $this->connectorRequest->userAgent,
-            'tokens' => $this->connectorRequest->tokens,
-            'parameters' => $this->connectorRequest->parameters,
-            'headers' => $this->connectorRequest->headers,
-            'body' => $this->connectorRequest->body,
-            'status' => $this->getConnector()->getStatus()
+            'method' => $this->getRequestProperty('method', 'get'),
+            'url' => $this->buildUrl(),
+            'userAgent' => $this->userAgent,
+            'tokens' => $this->getMergedTokens(),
+            'parameters' => $this->getMergedParameters(),
+            'headers' => $this->getMergedHeaders(),
+            'body' => $this->getRequestProperty('body'),
+            'status' => $this->getStatus()
         ];
         return $result;
+    }
+
+    /**
+     * Build url.
+     *
+     * @return string
+     */
+    protected function buildUrl()
+    {
+        // Prepare base url.
+        $url = $this->baseUrl;
+        if (substr($url, -1) == '/') {
+            $url = substr($url, 0, -1);
+        }
+
+        // Add path.
+        $path = (string)$this->getRequestProperty('path', '');
+        if ($path != '') {
+            $path = (string)trim($path, '/');
+            $url .= '/' . $path;
+        }
+
+        // Replace tokens.
+        $tokens = $this->getMergedTokens();
+        if (count($tokens) > 0) {
+            foreach ($tokens as $token => $value) {
+                $url = str_replace('{' . $token . '}', $value, $url);
+            }
+        }
+
+        // Add parameters.
+        $parameters = $this->getMergedParameters();
+        $urlParameters = [];
+        if (count($parameters) > 0) {
+            $url .= strpos($url, '?') > 0 ? '&' : '?';
+            foreach ($parameters as $name => $value) {
+                $urlParameters[] = $name . '=' . urlencode($value);
+            }
+            $url .= implode('&', $urlParameters);
+        }
+
+        return $url;
+    }
+
+    /**
+     * Get merged headers.
+     *
+     * @return array
+     */
+    private function getMergedHeaders()
+    {
+        return $this->mergeProperties($this->headers, $this->getRequestProperty('headers', []));
+    }
+
+    /**
+     * Get merged tokens.
+     *
+     * @return array
+     */
+    private function getMergedTokens()
+    {
+        return $this->mergeProperties($this->tokens, $this->getRequestProperty('tokens', []));
+    }
+
+    /**
+     * Get merged parameters.
+     *
+     * @return array
+     */
+    private function getMergedParameters()
+    {
+        return $this->mergeProperties($this->parameters, $this->getRequestProperty('parameters', []));
     }
 
     /**
@@ -234,5 +350,42 @@ abstract class Client
         }
 
         return $properties;
+    }
+
+    /**
+     * Get request property.
+     *
+     * @param string $property
+     * @param mixed $defaultValue Default null.
+     * @return mixed
+     */
+    private function getRequestProperty($property, $defaultValue = null)
+    {
+        if (isset($this->requestProperties[$property])) {
+            return $this->requestProperties[$property];
+        }
+        return $defaultValue;
+    }
+
+    /** @noinspection PhpUnusedPrivateMethodInspection */
+    /** @noinspection PhpUnusedParameterInspection */
+    /**
+     * Handle response headers (curl).
+     *
+     * @param object $curl
+     * @param string $headerLine
+     * @return integer
+     */
+    private function handleResponseHeaders($curl, $headerLine)
+    {
+        if (trim($headerLine) != '') {
+            $pos = strpos($headerLine, ':');
+            if (is_int($pos)) {
+                $name = trim(substr($headerLine, 0, $pos));
+                $value = trim(substr($headerLine, $pos + 1));
+                $this->responseHeaders[$name] = $value;
+            }
+        }
+        return strlen($headerLine);
     }
 }

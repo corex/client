@@ -63,10 +63,12 @@ abstract class Request implements RequestInterface
      *
      * @param string $name
      * @param string $value Will be urlencoded automatically.
+     * @return $this
      */
     public function param($name, $value)
     {
         $this->parameters[$name] = $value;
+        return $this;
     }
 
     /**

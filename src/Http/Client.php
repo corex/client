@@ -3,7 +3,6 @@
 namespace CoRex\Client\Http;
 
 use CoRex\Client\Base\Client as BaseClient;
-use CoRex\Client\Base\RequestInterface;
 
 class Client extends BaseClient
 {
@@ -15,11 +14,11 @@ class Client extends BaseClient
      */
     public function call(RequestInterface $request)
     {
-        $response = $this->callConnector($request);
+        $this->callConnector($request);
         return new Response(
-            $response->response,
-            $response->headers,
-            $response->httpCode
+            $this->getResponse(),
+            $this->getHeaders(),
+            $this->getStatus()
         );
     }
 }

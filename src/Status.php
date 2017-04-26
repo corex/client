@@ -82,7 +82,7 @@ class Status
      *
      * @return array
      */
-    public static function getMessages()
+    public static function messages()
     {
         return self::$messages;
     }
@@ -94,9 +94,9 @@ class Status
      * @param string $code
      * @return string
      */
-    public static function getMessage($code)
+    public static function message($code)
     {
-        $messages = self::getMessages();
+        $messages = self::messages();
         if (isset($messages[$code])) {
             if ($code == 200) {
                 return '';

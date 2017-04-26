@@ -96,4 +96,14 @@ abstract class Request implements RequestInterface
     {
         $this->body = $body;
     }
+
+    /**
+     * Get body.
+     *
+     * @return string
+     */
+    protected function getBody()
+    {
+        return (string)$this->body;
+    }
 }

@@ -13,6 +13,16 @@ class RestClientTest extends TestCase
     private $baseUrl = 'http://this.is.a.test/{token}/test';
 
     /**
+     * Test base url constructor.
+     */
+    public function testBaseUrlConstructor()
+    {
+        $client = new Client($this->baseUrl);
+        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $client, BaseClient::class);
+        $this->assertEquals($this->baseUrl, $properties['baseUrl']);
+    }
+
+    /**
      * Test base url.
      */
     public function testBaseUrl()

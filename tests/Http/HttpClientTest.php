@@ -15,6 +15,16 @@ class HttpClientTest extends TestCase
     /**
      * Test base url.
      */
+    public function testBaseUrlConstructor()
+    {
+        $client = new Client($this->baseUrl);
+        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $client, BaseClient::class);
+        $this->assertEquals($this->baseUrl, $properties['baseUrl']);
+    }
+
+    /**
+     * Test base url.
+     */
     public function testBaseUrl()
     {
         $client = new Client();

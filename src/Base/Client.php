@@ -26,9 +26,10 @@ abstract class Client
     /**
      * Client constructor.
      *
+     * @param string $baseUrl Default ''.
      * @throws Exception
      */
-    public function __construct()
+    public function __construct($baseUrl = '')
     {
         if (!function_exists('curl_init')) {
             throw new Exception('Client URL Library does not exist.');
@@ -50,7 +51,7 @@ abstract class Client
         $this->response = '';
 
         // Set connector.
-        $this->baseUrl = '';
+        $this->baseUrl = $baseUrl;
         $this->tokens = [];
         $this->parameters = [];
         $this->headers = [];

@@ -9,12 +9,14 @@ class Client extends BaseClient
     /**
      * Call.
      *
-     * @param RequestInterface $request
+     * @param string $method
+     * @param RequestInterface $request Default null.
      * @return Response
+     * @throws \Exception
      */
-    public function call(RequestInterface $request)
+    public function call($method, RequestInterface $request = null)
     {
-        $this->callConnector($request);
+        $this->callConnector($method, $request);
         return new Response(
             $this->getResponse(),
             $this->getHeaders(),

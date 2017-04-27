@@ -9,12 +9,11 @@ class Request extends BaseRequest implements RequestInterface
     /**
      * Request constructor.
      *
-     * @param string $method
      * @param string $path Default null. If specified, added to baseUrl on client.
      */
-    public function __construct($method, $path = null)
+    public function __construct($path = null)
     {
-        parent::__construct($method, $path);
+        parent::__construct($path);
         $this->header('Content-Type', 'application/json');
         $this->header('Accept', 'application/json');
     }

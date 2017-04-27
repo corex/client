@@ -2,11 +2,8 @@
 
 namespace CoRex\Client\Base;
 
-use CoRex\Client\Method;
-
 abstract class Request implements RequestInterface
 {
-    private $method;
     private $path;
     private $tokens;
     private $parameters;
@@ -16,16 +13,11 @@ abstract class Request implements RequestInterface
     /**
      * Request constructor.
      *
-     * @param string $method
      * @param string $path Default null. If specified, added to baseUrl on client.
      * @throws \Exception
      */
-    public function __construct($method, $path = null)
+    public function __construct($path = null)
     {
-        if (!Method::isSupported($method)) {
-            throw new \Exception('Method ' . $method . ' is not supported.');
-        }
-        $this->method = $method;
         $this->path = $path;
         $this->tokens = [];
         $this->parameters = [];

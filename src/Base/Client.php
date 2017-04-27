@@ -22,6 +22,7 @@ abstract class Client
     private $status;
     private $timeout;
     private $response;
+    private $method;
 
     /**
      * Client constructor.
@@ -140,30 +141,41 @@ abstract class Client
     /**
      * Call connector.
      *
+     * @param string $method
      * @param object $request
+     * @throws \Exception
      */
-    protected function callConnector($request)
+    protected function callConnector($method, $request)
     {
-        $this->requestProperties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $request, Request::class);
+        if (!Method::isSupported($method)) {
+            throw new \Exception('Method ' . $method . ' is not supported');
+        }
+        $this->method = $method;
+
+        if ($request !== null) {
+            $this->requestProperties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $request, Request::class);
+        } else {
+            $this->requestProperties = [];
+        }
         $headers = $this->getMergedHeaders();
 
         // Set timeout.
         curl_setopt($this->curl, CURLOPT_TIMEOUT, $this->timeout);
 
         // Set method (except GET).
-        $method = $this->getRequestProperty('method', 'get');
-        if ($method != Method::GET) {
-            curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, strtoupper($method));
+        if ($this->method != Method::GET) {
+            curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, strtoupper($this->method));
         }
 
         // post
-        if ($method == Method::POST) {
+        if ($this->method == Method::POST) {
             curl_setopt($this->curl, CURLOPT_POST, true);
         }
 
         // put
-        if ($method == Method::PUT) {
-            $headers['Content-Length'] = mb_strlen($request->body);
+        if ($this->method == Method::PUT) {
+            $body = (string)$this->getRequestProperty('body', '');
+            $headers['Content-Length'] = mb_strlen($body);
         }
 
         // Set headers.
@@ -246,7 +258,7 @@ abstract class Client
     public function getDebug()
     {
         $result = [
-            'method' => $this->getRequestProperty('method', 'get'),
+            'method' => $this->method,
             'url' => $this->buildUrl(),
             'userAgent' => $this->userAgent,
             'tokens' => $this->getMergedTokens(),

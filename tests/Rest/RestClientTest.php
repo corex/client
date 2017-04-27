@@ -39,11 +39,11 @@ class RestClientTest extends TestCase
     public function testTokenRequest()
     {
         $check = md5(microtime(true));
-        $request = new Request(Method::GET);
+        $request = new Request();
         $request->token('token', $check);
 
         $client = $this->getTestClient([], [], 0);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals(['token' => $check], $debug['tokens']);
@@ -55,11 +55,11 @@ class RestClientTest extends TestCase
     public function testTokenClient()
     {
         $check = md5(microtime(true));
-        $request = new Request(Method::GET);
+        $request = new Request();
 
         $client = $this->getTestClient([], [], 0);
         $client->token('token', $check);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals(['token' => $check], $debug['tokens']);
@@ -72,12 +72,12 @@ class RestClientTest extends TestCase
     {
         $check1 = md5(microtime(true)) . '_1';
         $check2 = md5(microtime(true)) . '_2';
-        $request = new Request(Method::GET);
+        $request = new Request();
         $request->token('token', $check1);
 
         $client = $this->getTestClient([], [], 0);
         $client->token('token', $check2, true);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals(['token' => $check2], $debug['tokens']);
@@ -89,11 +89,11 @@ class RestClientTest extends TestCase
     public function testParamRequest()
     {
         $check = md5(microtime(true));
-        $request = new Request(Method::GET);
+        $request = new Request();
         $request->param('param', $check);
 
         $client = $this->getTestClient([], [], 0);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals(['param' => $check], $debug['parameters']);
@@ -105,11 +105,11 @@ class RestClientTest extends TestCase
     public function testParamClient()
     {
         $check = md5(microtime(true));
-        $request = new Request(Method::GET);
+        $request = new Request();
 
         $client = $this->getTestClient([], [], 0);
         $client->param('param', $check);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals(['param' => $check], $debug['parameters']);
@@ -122,12 +122,12 @@ class RestClientTest extends TestCase
     {
         $check1 = md5(microtime(true)) . '_1';
         $check2 = md5(microtime(true)) . '_2';
-        $request = new Request(Method::GET);
+        $request = new Request();
         $request->param('param', $check1);
 
         $client = $this->getTestClient([], [], 0);
         $client->param('param', $check2, true);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals(['param' => $check2], $debug['parameters']);
@@ -139,11 +139,11 @@ class RestClientTest extends TestCase
     public function testHeaderRequest()
     {
         $check = md5(microtime(true));
-        $request = new Request(Method::GET);
+        $request = new Request();
         $request->header('header', $check);
 
         $client = $this->getTestClient([], [], 0);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals([
@@ -159,11 +159,11 @@ class RestClientTest extends TestCase
     public function testHeaderClient()
     {
         $check = md5(microtime(true));
-        $request = new Request(Method::GET);
+        $request = new Request();
 
         $client = $this->getTestClient([], [], 0);
         $client->header('header', $check);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals([
@@ -180,12 +180,12 @@ class RestClientTest extends TestCase
     {
         $check1 = md5(microtime(true)) . '_1';
         $check2 = md5(microtime(true)) . '_2';
-        $request = new Request(Method::GET);
+        $request = new Request();
         $request->header('header', $check1);
 
         $client = $this->getTestClient([], [], 0);
         $client->header('header', $check2, true);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals([
@@ -202,11 +202,11 @@ class RestClientTest extends TestCase
     {
         $userAgent = 'user.agent';
 
-        $request = new Request(Method::GET);
+        $request = new Request();
 
         $client = $this->getTestClient([], [], 0);
         $client->userAgent($userAgent);
-        $client->call($request);
+        $client->call(Method::GET, $request);
 
         $debug = $client->getDebug();
         $this->assertEquals($userAgent, $debug['userAgent']);
@@ -220,7 +220,7 @@ class RestClientTest extends TestCase
         $this->expectException(TypeError::class);
         $request = new stdClass();
         $client = $this->getTestClient([], [], 0);
-        $client->call($request);
+        $client->call(Method::GET, $request);
     }
 
     /**
@@ -228,10 +228,113 @@ class RestClientTest extends TestCase
      */
     public function testCallCorrect()
     {
-        $request = new Request(Method::GET);
+        $request = new Request();
         $client = $this->getTestClient([], [], 0);
-        $response = $client->call($request);
+        $response = $client->call(Method::GET, $request);
         $this->assertInstanceOf(Response::class, $response);
+    }
+
+    /**
+     * Test no request.
+     */
+    public function testNoRequest()
+    {
+        $method = Method::GET;
+        $client = $this->getTestClient([], [], 0);
+        $client->call($method);
+        $debug = $client->getDebug();
+        $this->assertEquals($method, $debug['method']);
+        $this->assertEquals($this->baseUrl, $debug['url']);
+        $this->assertEquals('', $debug['userAgent']);
+        $this->assertEquals([], $debug['tokens']);
+        $this->assertEquals([], $debug['parameters']);
+        $this->assertEquals([], $debug['headers']);
+        $this->assertNull($debug['body']);
+        $this->assertEquals(0, $debug['status']);
+    }
+
+    /**
+     * Test call method get.
+     */
+    public function testCallMethodGet()
+    {
+        $method = Method::GET;
+        $client = $this->getTestClient([], [], 0);
+        $client->call($method);
+        $properties = $client->getDebug();
+        $this->assertEquals($method, $properties['method']);
+    }
+
+    /**
+     * Test call method post.
+     */
+    public function testCallMethodPost()
+    {
+        $method = Method::POST;
+        $client = $this->getTestClient([], [], 0);
+        $client->call($method);
+        $properties = $client->getDebug();
+        $this->assertEquals($method, $properties['method']);
+    }
+
+    /**
+     * Test call method put.
+     */
+    public function testCallMethodPut()
+    {
+        $method = Method::PUT;
+        $client = $this->getTestClient([], [], 0);
+        $client->call($method);
+        $properties = $client->getDebug();
+        $this->assertEquals($method, $properties['method']);
+    }
+
+    /**
+     * Test call method delete.
+     */
+    public function testCallMethodDelete()
+    {
+        $method = Method::DELETE;
+        $client = $this->getTestClient([], [], 0);
+        $client->call($method);
+        $properties = $client->getDebug();
+        $this->assertEquals($method, $properties['method']);
+    }
+
+    /**
+     * Test call method patch.
+     */
+    public function testCallMethodPatch()
+    {
+        $method = Method::PATCH;
+        $client = $this->getTestClient([], [], 0);
+        $client->call($method);
+        $properties = $client->getDebug();
+        $this->assertEquals($method, $properties['method']);
+    }
+
+    /**
+     * Test call method options.
+     */
+    public function testCallMethodOptions()
+    {
+        $method = Method::OPTIONS;
+        $client = $this->getTestClient([], [], 0);
+        $client->call($method);
+        $properties = $client->getDebug();
+        $this->assertEquals($method, $properties['method']);
+    }
+
+    /**
+     * Test call method unknown.
+     */
+    public function testCallMethodUnknown()
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Method unknown is not supported');
+        $method = 'unknown';
+        $client = $this->getTestClient([], [], 0);
+        $client->call($method);
     }
 
     /**

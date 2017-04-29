@@ -7,10 +7,13 @@ abstract class Entity
     /**
      * Data constructor.
      *
-     * @param array $data
+     * @param mixed $data
      */
-    public function __construct(array $data)
+    public function __construct($data)
     {
+        if ($data === null) {
+            $data = [];
+        }
         $properties = $this->getProperties();
         if (count($properties) > 0) {
             foreach ($properties as $property) {

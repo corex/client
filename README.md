@@ -3,123 +3,248 @@ Various clients for php (Http, Rest, etc.)
 
 **_Versioning for this package follows http://semver.org/. Backwards compatibility might break on upgrade to major versions._**
 
-## Http\Client
-- Support for specifying base-url through constructor and/or by method.
-- Support for specifying user agent.
-- Support for headers.
-- Support for specifying base-url with tokens and replace by method or request-class.
-- Support for specifying query fields.
-- Support for specifying request fields.
-- Support for specifying custom body.
-- Support for getting response header(s).
-- Support for getting debug-information.
-- Support for request-class with constructor based properties.
-- Support for get(), post(), put() and delete().
+Supported methods: get, post, put, delete, patch, options.
 
-The http client can be used in many ways. It is highly recommended to look at method-documentation in various classes.
+A typical flow would be ...
+- Create and set properties on client.
+- Create and set properties on request.
+- Call client with request (properties on client and request are merged).
+- Use response to get data (various methods exists to get data).
 
-Example of requesting data from a resource.
-```php
-$client = new Client('https://jsonplaceholder.typicode.com/albums');
-$response = $client->get();
-```
-
-To check if request was ok, simply check the http-code by using $client->getHttpCode().
-If anything else than 200, null is returned. You can get the message for the http-code by using ....
-```php
-$message = HttpCode::getMessage($client->getHttpCode());
-```
-
-To use request-class, you can do it like this ....
-```php
-$request = new Request([
-    'userId' => 1,
-    'id' => 3,
-    'title' => 'Some title',
-    'body' => 'Some body'
-]);
-$client = new Client('https://jsonplaceholder.typicode.com/posts');
-$response = $client->post($request);
-```
-.... and parse it to i.e. post().
-
-First parameter for constructor is fields, second is query and last is path.
-So there is a big advantage to extend this class and set some default parameters in constructor.
-
-Example of requesting data from a resource with path token and class extending.
-```php
-class MyRequest extends Request
-{
-    public $userId;
-    public $id;
-    public $title;
-    public $body;
-
-    public function __construct()
-    {
-        parent::__construct(
-            [
-                'resource' => 'posts',
-            ]
-        );
-    }
-}
-
-$request = new MyRequest();
-$request->userId = 1;
-$request->id = 3;
-$request->title = 'Some title';
-$request->body = 'Some body';
-
-$client = new Client('https://jsonplaceholder.typicode.com/{resource}');
-$response = $client->post($request);
-```
-In this example, a class extends request class, setting resource from constructor and have 4 properties to set.
-If you specify properties in class (above example) and also sets the same field in constructor,
-this field will be overwritten by property in class. All properties in classes will be considered a field on client.
 
 **Please note that the client might throw exceptions.**
 
-## Rest\Client
-- Support for getting data out of response using dot notation.
-- Support for handling response through object properties (DataList / DataObject).
 
-The Rest\Client is pretty much the same as Http\Client since Rest\Client extends Http\Client.
-Except that when you use get(), post(), put() and delete(), the data returned will be an instance of Response class.
+## Base client (abstract)
+All clients extends base client which means there will be a common set of methods available.
+- Url can be specified on constructor.
+- baseUrl() - Specify base url (overwrite base url set through constructor).
+- timeout() - Specify timeout in seconds.
+- token() - Specify token. Tokens are used to specify {} in path i.e. a path could be "/user/{id}" and calling token('id', 4') will result in "/user/4".
+- param() - Specify parameter. Example: param('param', 'test') will be added as [?/&]param=test on url. All parameters are url encoded.
+- header() - Specify request header(). Example: header('Accept', 'application/json').
+- userAgent() - Specify user agent.
+- getDebug() - Get debug information (response not returned).
 
-### Response
-Basic methods exists for getting data out of response-object using dot-notation.
-You can extend the existing Response class and parse the class as secondary parameter for client operation.
-Note that if you do this, you might not have code completion on all of your methods.
+Normally, setting tokens, parameters and headers on request will override tokens, parameters and headers on client. However, it is possible to specify them as final on client.
 
-Example of getting title from object no. 5.
+
+## Base request (abstract)
+- path() - Specify path. Will be added to url.
+- token() - Specify token (explained elsewhere). It will override client unless it is set as final.
+- param() - Specify parameter (explained elsewhere). It will override client unless it is set as final.
+- header() - Specify header (explained elsewhere). It will override client unless it is set as final.
+
+
+## Base response (abstract)
+- header() - Get response header.
+- headers() - Get response headers.
+- body() - Get body.
+- status() - Get status (http status). If request succeeded, it will return 200. Get messages through class Status.
+
+
+## Http\Client (extends base client)
+Methods inherited from base response.
+
+A few examples.
 ```php
-$client = new Client('https://jsonplaceholder.typicode.com/albums');
-$response = $client->get();
-$title = $response->get('4.title');
+// Get 1 post.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response);
+
+// Get 1 post by token on request.
+$client = new Http\Client('https://jsonplaceholder.typicode.com/posts/{id}');
+$request = (new Http\Request())->token('id', 1);
+$response = $client->call(Method::GET, $request);
+var_dump($response);
+
+// Get 1 post by path and token on request.
+$client = new Http\Client('https://jsonplaceholder.typicode.com');
+$request = (new Http\Request())->path('/posts/{id}')->token('id', 1);
+$response = $client->call(Method::GET, $request);
+var_dump($response);
 ```
 
-Example of getting data using DataList/DataObject class.
+
+## Http\Request (extends base request)
+- body() Set body.
+
+A few examples.
 ```php
-class AlbumData extends DataObject
+// Create request with path and token on request.
+$request = new Http\Request();
+$request->path('/posts/{id}');
+$request->token('id', 1);
+var_dump($request);
+
+// Create request with header.
+$request = new Http\Request();
+$request->header('Accept', 'application/json');
+var_dump($request);
+
+// Create request with query parameter fields.
+$request = new Http\Request();
+$request->param('fields', 'firstname,lastname');
+var_dump($request);
+
+// Create request with body set.
+$request = new Http\Request();
+$request->body('{"something":["test1","test2"]}');
+var_dump($request);
+```
+
+
+## Http\Response (extends base response)
+Methods inherited from base response.
+
+A few examples.
+```php
+// Get body from response.
+$client = new Http\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response->body());
+
+// Get status + status-message from response.
+$client = new Http\Client('https://jsonplaceholder.typicode.com/unknown');
+$response = $client->call(Method::GET);
+if ($response->status() != 200) {
+    var_dump($response->status());
+    var_dump(Status::message($response->status()));
+}
+
+// Get response headers.
+$client = new Http\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response->headers());
+
+// Get Content-Type from response headers.
+$client = new Http\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response->header('Content-Type'));
+```
+
+
+## Rest\Client (extends base client)
+Methods inherited from base response.
+
+A few examples.
+```php
+// Get 1 post.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response);
+
+// Get 1 post by token on request.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/posts/{id}');
+$request = (new Rest\Request())->token('id', 1);
+$response = $client->call(Method::GET, $request);
+var_dump($response);
+
+// Get 1 post by path and token on request.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com');
+$request = (new Rest\Request())->path('/posts/{id}')->token('id', 1);
+$response = $client->call(Method::GET, $request);
+var_dump($response);
+```
+
+
+## Rest\Request (extends base request)
+- field() - 
+
+A few examples.
+```php
+// Create request with path and token on request.
+$request = new Rest\Request();
+$request->path('/posts/{id}');
+$request->token('id', 1);
+var_dump($request);
+
+// Create request with header.
+$request = new Rest\Request();
+$request->header('Accept', 'application/json');
+var_dump($request);
+
+// Create request with query parameter fields.
+$request = new Rest\Request();
+$request->param('fields', 'firstname,lastname');
+var_dump($request);
+
+// Create request with fields.
+$request = new Rest\Request();
+$request->field('firstname', 'Roger');
+$request->field('lastname', 'Moore');
+var_dump($request);
+```
+
+
+## Rest\Response (extends base response)
+- value() - 
+- toArray() - 
+
+A few examples.
+```php
+// Get body from response.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response->body());
+
+// Get status + status-message from response.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/unknown');
+$response = $client->call(Method::GET);
+if ($response->status() != 200) {
+    var_dump($response->status());
+    var_dump(Status::message($response->status()));
+}
+
+// Get response headers.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response->headers());
+
+// Get Content-Type from response headers.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response->header('Content-Type'));
+
+// Get title from response. Dot notation supported.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response->value('title'));
+
+// Get response as array.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/posts/1');
+$response = $client->call(Method::GET);
+var_dump($response->toArray());
+```
+
+
+## Rest\Entity (abstract) / Rest\Collection (abstract)
+- toArray() - 
+
+An example of using Entity and Collection.
+```php
+class Album extends Entity
 {
     public $userId;
     public $id;
     public $title;
 }
 
-class AlbumList extends DataList
+class Albums extends Collection
 {
     public function current()
     {
-        return new AlbumData(parent::current());
+        return new Album(parent::current());
     }
 }
 
-$client = new Client('https://jsonplaceholder.typicode.com/albums');
-$response = $client->get();
-$albums = new AlbumList($response);
+// Using above classes will make you able to iterate over album/albums and have auto-completion.
+$client = new Rest\Client('https://jsonplaceholder.typicode.com/albums');
+$response = $client->call(Method::GET);
+$albums = new Albums($response);
 foreach ($albums as $album) {
     print($album->title . "\n");
+    var_dump($album->toArray());
 }
 ```

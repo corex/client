@@ -44,7 +44,7 @@ Normally, setting tokens, parameters and headers on request will override tokens
 
 
 ## Http\Client (extends base client)
-Methods inherited from base response.
+Methods inherited from base client.
 
 A few examples.
 ```php
@@ -68,7 +68,9 @@ var_dump($response);
 
 
 ## Http\Request (extends base request)
-- body() Set body.
+Methods inherited from base request + following...
+
+- body() - Set body.
 
 A few examples.
 ```php
@@ -126,7 +128,7 @@ var_dump($response->header('Content-Type'));
 
 
 ## Rest\Client (extends base client)
-Methods inherited from base response.
+Methods inherited from base client.
 
 A few examples.
 ```php
@@ -150,7 +152,9 @@ var_dump($response);
 
 
 ## Rest\Request (extends base request)
-- field() - 
+Methods inherited from base request + following...
+
+- field() - Set field i.e. field('firstname', 'Roger');
 
 A few examples.
 ```php
@@ -179,8 +183,10 @@ var_dump($request);
 
 
 ## Rest\Response (extends base response)
-- value() - 
-- toArray() - 
+Methods inherited from base response + following...
+
+- value() - Get value from response. Uses dot notation i.e. value('actor.firstname');
+- toArray() - To array.
 
 A few examples.
 ```php
@@ -220,7 +226,8 @@ var_dump($response->toArray());
 
 
 ## Rest\Entity (abstract) / Rest\Collection (abstract)
-- toArray() - 
+
+- toArray() - To array.
 
 An example of using Entity and Collection.
 ```php

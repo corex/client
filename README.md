@@ -226,6 +226,7 @@ var_dump($response->toArray());
 
 
 ## Rest\Entity (abstract) / Rest\Collection (abstract)
+There exist a lot of methods to extract data from collection. Look at corex/support to see available methods on Collection. Added following method(s)...
 
 - toArray() - To array.
 

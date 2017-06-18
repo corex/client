@@ -18,7 +18,7 @@ class RestClientTest extends TestCase
     public function testBaseUrlConstructor()
     {
         $client = new Client($this->baseUrl);
-        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $client, BaseClient::class);
+        $properties = Obj::getProperties($client, BaseClient::class, Obj::PROPERTY_PRIVATE);
         $this->assertEquals($this->baseUrl, $properties['baseUrl']);
     }
 
@@ -29,7 +29,7 @@ class RestClientTest extends TestCase
     {
         $client = new Client();
         $client->baseUrl($this->baseUrl);
-        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $client, BaseClient::class);
+        $properties = Obj::getProperties($client, BaseClient::class, Obj::PROPERTY_PRIVATE);
         $this->assertEquals($this->baseUrl, $properties['baseUrl']);
     }
 

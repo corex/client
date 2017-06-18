@@ -81,7 +81,7 @@ class HttpRequestTest extends TestCase
      */
     private function getRequestProperty($request, $property)
     {
-        $properties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $request, BaseRequest::class);
+        $properties = Obj::getProperties($request, BaseRequest::class, Obj::PROPERTY_PRIVATE);
         if (isset($properties[$property])) {
             return $properties[$property];
         }

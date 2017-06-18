@@ -153,7 +153,7 @@ abstract class Client
         $this->method = $method;
 
         if ($request !== null) {
-            $this->requestProperties = Obj::getPropertiesFromObject(Obj::PROPERTY_PRIVATE, $request, Request::class);
+            $this->requestProperties = Obj::getProperties($request, Request::class, Obj::PROPERTY_PRIVATE);
         } else {
             $this->requestProperties = [];
         }

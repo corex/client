@@ -1,7 +1,10 @@
 # CoRex Client
 Various clients for php (Http, Rest, etc.)
 
-**_Versioning for this package follows http://semver.org/. Backwards compatibility might break on upgrade to major versions._**
+![License](https://img.shields.io/packagist/l/corex/client.svg)
+![Build Status](https://travis-ci.org/corex/client.svg?branch=master)
+![codecov](https://codecov.io/gh/corex/client/branch/master/graph/badge.svg)
+
 
 Supported methods: get, post, put, delete, patch, options.
 

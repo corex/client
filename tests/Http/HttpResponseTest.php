@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\CoRex\Client\Http;
+
 use CoRex\Client\Http\Response;
 use PHPUnit\Framework\TestCase;
 

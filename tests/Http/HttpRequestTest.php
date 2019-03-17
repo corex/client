@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\CoRex\Client\Http;
+
 use CoRex\Client\Base\Request as BaseRequest;
 use CoRex\Client\Http\Request;
 use CoRex\Support\Obj;

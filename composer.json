@@ -26,5 +26,10 @@
         "psr-4": {
             "CoRex\\Client\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\CoRex\\Client\\": "tests"
+        }
     }
 }

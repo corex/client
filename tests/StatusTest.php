@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\CoRex\Client;
+
 use CoRex\Client\Status;
 use PHPUnit\Framework\TestCase;
 

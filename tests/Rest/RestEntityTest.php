@@ -1,6 +1,9 @@
 <?php
 
+namespace Tests\CoRex\Client\Rest;
+
 use PHPUnit\Framework\TestCase;
+use Tests\CoRex\Client\Helpers\EntityHelper;
 
 class RestEntityTest extends TestCase
 {

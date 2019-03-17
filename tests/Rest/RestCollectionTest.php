@@ -1,6 +1,9 @@
 <?php
 
+namespace Tests\CoRex\Client\Rest;
+
 use PHPUnit\Framework\TestCase;
+use Tests\CoRex\Client\Helpers\CollectionHelper;
 
 class RestCollectionTest extends TestCase
 {

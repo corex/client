@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\CoRex\Client\Helpers;
+
 use CoRex\Client\Rest\Entity;
 
 class EntityHelper extends Entity

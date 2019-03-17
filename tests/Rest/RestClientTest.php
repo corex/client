@@ -1,12 +1,16 @@
 <?php
 
+namespace Tests\CoRex\Client\Rest;
+
 use CoRex\Client\Base\Client as BaseClient;
 use CoRex\Client\Method;
 use CoRex\Client\Rest\Client;
 use CoRex\Client\Rest\Request;
 use CoRex\Client\Rest\Response;
 use CoRex\Support\Obj;
+use Exception;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 class RestClientTest extends TestCase
 {
@@ -218,7 +222,7 @@ class RestClientTest extends TestCase
     public function testCallWrong()
     {
         $this->expectException(TypeError::class);
-        $request = new stdClass();
+        $request = new \stdClass();
         $client = $this->getTestClient([], [], 0);
         $client->call(Method::GET, $request);
     }

@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\CoRex\Client\Helpers;
+
 use CoRex\Client\Rest\Collection;
 
 class CollectionHelper extends Collection

@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\CoRex\Client\Helpers;
+
 use CoRex\Support\Obj;
 
 class PropertiesHelper

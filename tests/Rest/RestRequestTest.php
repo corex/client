@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\CoRex\Client\Rest;
+
 use CoRex\Client\Base\Request as BaseRequest;
 use CoRex\Client\Rest\Request;
 use CoRex\Support\Obj;
@@ -52,6 +54,7 @@ class RestRequestTest extends TestCase
 
     /**
      * Test header.
+     * @throws \ReflectionException
      */
     public function testHeader()
     {
@@ -72,6 +75,7 @@ class RestRequestTest extends TestCase
      * @param object $request
      * @param string $property
      * @return mixed
+     * @throws \ReflectionException
      */
     private function getRequestProperty($request, $property)
     {
